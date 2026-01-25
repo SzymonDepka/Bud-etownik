@@ -91,7 +91,6 @@ class MainMenu extends StatelessWidget {
 class MenuButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-
   const MenuButton({required this.text, required this.onPressed});
 
   @override
@@ -117,7 +116,7 @@ class MenuButton extends StatelessWidget {
 }
 
 // ======================
-// VARIABLE COSTS
+// VARIABLE COSTS SCREEN
 // ======================
 class VariableCostsScreen extends StatefulWidget {
   @override
@@ -130,31 +129,35 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
   final _amountController = TextEditingController();
   TransactionType _type = TransactionType.expense;
   String _selectedCategory = 'Ogólne';
-
   final List<String> _categories = [
-    'Ogólne',
-    'Jedzenie',
-    'Transport',
-    'Rozrywka',
-    'Zdrowie',
-    'Inne'
+    'Ogólne', 'Jedzenie', 'Transport', 'Rozrywka', 'Zdrowie', 'Inne'
   ];
 
-  void _addTransaction() {
+  void _showTransactionDialog({Transaction? transaction}) {
+    if (transaction != null) {
+      _descriptionController.text = transaction.description;
+      _amountController.text = transaction.amount.toString();
+      _type = transaction.type;
+      _selectedCategory = transaction.category;
+    } else {
+      _descriptionController.clear();
+      _amountController.clear();
+      _type = TransactionType.expense;
+      _selectedCategory = 'Ogólne';
+    }
+
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Dodaj transakcję'),
+        title: Text(transaction == null ? 'Dodaj transakcję' : 'Edytuj transakcję'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<TransactionType>(
               value: _type,
               items: const [
-                DropdownMenuItem(
-                    value: TransactionType.expense, child: Text('Koszt')),
-                DropdownMenuItem(
-                    value: TransactionType.income, child: Text('Przychód')),
+                DropdownMenuItem(value: TransactionType.expense, child: Text('Koszt')),
+                DropdownMenuItem(value: TransactionType.income, child: Text('Przychód')),
               ],
               onChanged: (v) => _type = v!,
               decoration: const InputDecoration(labelText: 'Typ'),
@@ -170,36 +173,49 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
             ),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              items: _categories
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                  .toList(),
+              items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) => _selectedCategory = v!,
               decoration: const InputDecoration(labelText: 'Kategoria'),
             ),
           ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Anuluj')),
           ElevatedButton(
-            onPressed: () {
-              _budgetService.addTransaction(Transaction(
-                id: DateTime.now().toIso8601String(),
-                type: _type,
-                amount: double.parse(_amountController.text),
-                date: DateTime.now(),
-                category: _selectedCategory,
-                description: _descriptionController.text,
-              ));
+            onPressed: () async {
+              final amount = double.tryParse(_amountController.text) ?? 0;
+              if (transaction == null) {
+                await _budgetService.addTransaction(Transaction(
+                  id: DateTime.now().toIso8601String(),
+                  type: _type,
+                  amount: amount,
+                  date: DateTime.now(),
+                  category: _selectedCategory,
+                  description: _descriptionController.text,
+                ));
+              } else {
+                await _budgetService.editTransaction(transaction.id, Transaction(
+                  id: transaction.id,
+                  type: _type,
+                  amount: amount,
+                  date: transaction.date,
+                  category: _selectedCategory,
+                  description: _descriptionController.text,
+                ));
+              }
               setState(() {});
               Navigator.pop(context);
             },
-            child: const Text('Dodaj'),
+            child: Text(transaction == null ? 'Dodaj' : 'Zapisz'),
           ),
         ],
       ),
     );
+  }
+
+  void _deleteTransaction(String id) async {
+    await _budgetService.deleteTransaction(id);
+    setState(() {});
   }
 
   @override
@@ -208,8 +224,10 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Koszty zmienne')),
-      floatingActionButton:
-          FloatingActionButton(onPressed: _addTransaction, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showTransactionDialog(),
+        child: const Icon(Icons.add),
+      ),
       body: ListView.builder(
         itemCount: transactions.length,
         itemBuilder: (_, i) {
@@ -217,7 +235,21 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
           return ListTile(
             title: Text(t.description),
             subtitle: Text('${t.type == TransactionType.income ? 'Przychód' : 'Koszt'} • ${t.category}'),
-            trailing: Text('${t.amount.toStringAsFixed(2)} zł'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${t.amount.toStringAsFixed(2)} zł', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => _showTransactionDialog(transaction: t),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteTransaction(t.id),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -226,7 +258,7 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
 }
 
 // ======================
-// FIXED COSTS
+// FIXED COSTS SCREEN
 // ======================
 class FixedCostsScreen extends StatefulWidget {
   @override
@@ -239,20 +271,25 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
   final _amountController = TextEditingController();
   FixedCostPeriod _period = FixedCostPeriod.monthly;
   String _selectedCategory = 'Stałe';
+  final List<String> _categories = ['Stałe', 'Mieszkanie', 'Rachunki', 'Subskrypcje', 'Inne'];
 
-  final List<String> _categories = [
-    'Stałe',
-    'Mieszkanie',
-    'Rachunki',
-    'Subskrypcje',
-    'Inne'
-  ];
+  void _showFixedCostDialog({FixedCost? cost}) {
+    if (cost != null) {
+      _nameController.text = cost.name;
+      _amountController.text = cost.amount.toString();
+      _period = cost.period;
+      _selectedCategory = cost.category;
+    } else {
+      _nameController.clear();
+      _amountController.clear();
+      _period = FixedCostPeriod.monthly;
+      _selectedCategory = 'Stałe';
+    }
 
-  void _addFixedCost() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Dodaj koszt stały'),
+        title: Text(cost == null ? 'Dodaj koszt stały' : 'Edytuj koszt stały'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -268,46 +305,57 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
             DropdownButtonFormField<FixedCostPeriod>(
               value: _period,
               items: const [
-                DropdownMenuItem(
-                    value: FixedCostPeriod.monthly, child: Text('Miesięczny')),
-                DropdownMenuItem(
-                    value: FixedCostPeriod.yearly, child: Text('Roczny')),
+                DropdownMenuItem(value: FixedCostPeriod.monthly, child: Text('Miesięczny')),
+                DropdownMenuItem(value: FixedCostPeriod.yearly, child: Text('Roczny')),
               ],
               onChanged: (v) => _period = v!,
               decoration: const InputDecoration(labelText: 'Okres'),
             ),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              items: _categories
-                  .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                  .toList(),
+              items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) => _selectedCategory = v!,
               decoration: const InputDecoration(labelText: 'Kategoria'),
             ),
           ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Anuluj')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Anuluj')),
           ElevatedButton(
-            onPressed: () {
-              _budgetService.addFixedCost(FixedCost(
-                id: DateTime.now().toIso8601String(),
-                name: _nameController.text,
-                amount: double.parse(_amountController.text),
-                category: _selectedCategory,
-                period: _period,
-                startDate: DateTime.now(),
-              ));
+            onPressed: () async {
+              final amount = double.tryParse(_amountController.text) ?? 0;
+              if (cost == null) {
+                await _budgetService.addFixedCost(FixedCost(
+                  id: DateTime.now().toIso8601String(),
+                  name: _nameController.text,
+                  amount: amount,
+                  category: _selectedCategory,
+                  period: _period,
+                  startDate: DateTime.now(),
+                ));
+              } else {
+                await _budgetService.editFixedCost(cost.id, FixedCost(
+                  id: cost.id,
+                  name: _nameController.text,
+                  amount: amount,
+                  category: _selectedCategory,
+                  period: _period,
+                  startDate: cost.startDate,
+                ));
+              }
               setState(() {});
               Navigator.pop(context);
             },
-            child: const Text('Dodaj'),
+            child: Text(cost == null ? 'Dodaj' : 'Zapisz'),
           ),
         ],
       ),
     );
+  }
+
+  void _deleteFixedCost(String id) async {
+    await _budgetService.deleteFixedCost(id);
+    setState(() {});
   }
 
   @override
@@ -316,17 +364,32 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Koszty stałe')),
-      floatingActionButton:
-          FloatingActionButton(onPressed: _addFixedCost, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showFixedCostDialog(),
+        child: const Icon(Icons.add),
+      ),
       body: ListView.builder(
         itemCount: fixedCosts.length,
         itemBuilder: (_, i) {
           final fc = fixedCosts[i];
           return ListTile(
             title: Text(fc.name),
-            subtitle:
-                Text('${fc.period == FixedCostPeriod.monthly ? 'Miesięczny' : 'Roczny'} • ${fc.category}'),
-            trailing: Text('${fc.amount.toStringAsFixed(2)} zł'),
+            subtitle: Text('${fc.period == FixedCostPeriod.monthly ? 'Miesięczny' : 'Roczny'} • ${fc.category}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('${fc.amount.toStringAsFixed(2)} zł', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(width: 10),
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () => _showFixedCostDialog(cost: fc),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteFixedCost(fc.id),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -335,9 +398,8 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
 }
 
 // ======================
-// BUDGET SCREEN
+// ANNUAL BUDGET SCREEN
 // ======================
-
 class AnnualBudgetScreen extends StatefulWidget {
   @override
   State<AnnualBudgetScreen> createState() => _AnnualBudgetScreenState();
@@ -399,3 +461,4 @@ class SummaryTile extends StatelessWidget {
     );
   }
 }
+

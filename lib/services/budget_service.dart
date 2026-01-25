@@ -10,22 +10,57 @@ class BudgetService {
   late Box<Transaction> _transactionsBox;
   late Box<FixedCost> _fixedCostsBox;
 
+  /// Inicjalizacja Hive i otwarcie boxów
   Future<void> init() async {
     _transactionsBox = await Hive.openBox<Transaction>('transactions');
     _fixedCostsBox = await Hive.openBox<FixedCost>('fixedCosts');
   }
 
+  /// Pobranie wszystkich transakcji i kosztów stałych
   List<Transaction> get transactions => _transactionsBox.values.toList();
   List<FixedCost> get fixedCosts => _fixedCostsBox.values.toList();
 
-  void addTransaction(Transaction t) => _transactionsBox.put(t.id, t);
-  void updateTransaction(Transaction t) => _transactionsBox.put(t.id, t);
-  void removeTransaction(String id) => _transactionsBox.delete(id);
+  // ======================
+  // TRANSACTIONS
+  // ======================
+  Future<void> addTransaction(Transaction t) async {
+    await _transactionsBox.put(t.id, t);
+  }
 
-  void addFixedCost(FixedCost fc) => _fixedCostsBox.put(fc.id, fc);
-  void updateFixedCost(FixedCost fc) => _fixedCostsBox.put(fc.id, fc);
-  void removeFixedCost(String id) => _fixedCostsBox.delete(id);
+  Future<void> editTransaction(String id, Transaction updated) async {
+    if (_transactionsBox.containsKey(id)) {
+      await _transactionsBox.put(id, updated);
+    }
+  }
 
+  Future<void> deleteTransaction(String id) async {
+    if (_transactionsBox.containsKey(id)) {
+      await _transactionsBox.delete(id);
+    }
+  }
+
+  // ======================
+  // FIXED COSTS
+  // ======================
+  Future<void> addFixedCost(FixedCost fc) async {
+    await _fixedCostsBox.put(fc.id, fc);
+  }
+
+  Future<void> editFixedCost(String id, FixedCost updated) async {
+    if (_fixedCostsBox.containsKey(id)) {
+      await _fixedCostsBox.put(id, updated);
+    }
+  }
+
+  Future<void> deleteFixedCost(String id) async {
+    if (_fixedCostsBox.containsKey(id)) {
+      await _fixedCostsBox.delete(id);
+    }
+  }
+
+  // ======================
+  // OBLICZENIA BUDŻETU
+  // ======================
   double calculateIncome(BudgetViewMode mode) {
     final income = transactions
         .where((t) => t.type == TransactionType.income)
@@ -66,8 +101,9 @@ class BudgetService {
     return value;
   }
 
-  /// Sumuje koszty według kategorii w zadanym zakresie dat
-  /// Zwraca mapę {kategoria: suma kosztów}
+  // ======================
+  // RAPORT KATEGORII
+  // ======================
   Map<String, double> getTotalsByCategory({
     required DateTime start,
     required DateTime end,
@@ -78,7 +114,6 @@ class BudgetService {
     for (final fc in fixedCosts) {
       if (!fc.appliesToMonth(start.year, start.month) &&
           !fc.appliesToMonth(end.year, end.month)) continue;
-
       totals[fc.category] = (totals[fc.category] ?? 0) + fc.monthlyAmount();
     }
 
@@ -92,7 +127,8 @@ class BudgetService {
   }
 }
 
-// Enum do trybu budżetu (teraz tylko tutaj, używaj jednej definicji)
+/// Tryb widoku budżetu
 enum BudgetViewMode { daily, monthly, yearly }
+
 
 
