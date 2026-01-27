@@ -1,10 +1,14 @@
+//IMPORT PAKIETÓW, MODELI, LOGIKI i EKRANÓW
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/transactions.dart';
 import 'models/fixed_costs.dart';
 import 'services/budget_service.dart';
 import 'screens/category_report_screen.dart';
+import 'screens/annual_budget_screen.dart';
 
+//PRZYGOTOWANIE DO URUCHOMIENIA APLIKACJI I INICJALIZACJA HIVE DO ZAPISYWANIA DANYCH
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -19,7 +23,11 @@ void main() async {
   runApp(BudzetownikApp());
 }
 
+//INICJACJA UI
+
 class BudzetownikApp extends StatelessWidget {
+  const BudzetownikApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,10 +38,11 @@ class BudzetownikApp extends StatelessWidget {
   }
 }
 
-// ======================
-// MAIN MENU
-// ======================
+// EKRAN MENU GŁÓWNEGO
+
 class MainMenu extends StatelessWidget {
+  const MainMenu({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,7 +68,7 @@ class MainMenu extends StatelessWidget {
                   ),
                 ),
                 MenuButton(
-                  text: 'Przychody i koszty stałe',
+                  text: 'Koszty stałe',
                   onPressed: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => FixedCostsScreen()),
@@ -88,10 +97,12 @@ class MainMenu extends StatelessWidget {
   }
 }
 
+//TWORZENIE WIDŻETU PRZYCISKU MENU
+
 class MenuButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  const MenuButton({required this.text, required this.onPressed});
+  const MenuButton({super.key, required this.text, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -115,10 +126,12 @@ class MenuButton extends StatelessWidget {
   }
 }
 
-// ======================
-// VARIABLE COSTS SCREEN
-// ======================
+
+// EKRAN DODAWANIA KOSZTÓW I PRZYCHODÓW ZMIENNYCH
+
 class VariableCostsScreen extends StatefulWidget {
+  const VariableCostsScreen({super.key});
+
   @override
   State<VariableCostsScreen> createState() => _VariableCostsScreenState();
 }
@@ -154,7 +167,7 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             DropdownButtonFormField<TransactionType>(
-              value: _type,
+              initialValue: _type,
               items: const [
                 DropdownMenuItem(value: TransactionType.expense, child: Text('Koszt')),
                 DropdownMenuItem(value: TransactionType.income, child: Text('Przychód')),
@@ -172,7 +185,7 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
               decoration: const InputDecoration(labelText: 'Kwota'),
             ),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) => _selectedCategory = v!,
               decoration: const InputDecoration(labelText: 'Kategoria'),
@@ -257,10 +270,12 @@ class _VariableCostsScreenState extends State<VariableCostsScreen> {
   }
 }
 
-// ======================
-// FIXED COSTS SCREEN
-// ======================
+
+// EKRAN KOSZTÓW STAŁYCH
+
 class FixedCostsScreen extends StatefulWidget {
+  const FixedCostsScreen({super.key});
+
   @override
   State<FixedCostsScreen> createState() => _FixedCostsScreenState();
 }
@@ -303,7 +318,7 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
               decoration: const InputDecoration(labelText: 'Kwota'),
             ),
             DropdownButtonFormField<FixedCostPeriod>(
-              value: _period,
+              initialValue: _period,
               items: const [
                 DropdownMenuItem(value: FixedCostPeriod.monthly, child: Text('Miesięczny')),
                 DropdownMenuItem(value: FixedCostPeriod.yearly, child: Text('Roczny')),
@@ -312,7 +327,7 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
               decoration: const InputDecoration(labelText: 'Okres'),
             ),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              initialValue: _selectedCategory,
               items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) => _selectedCategory = v!,
               decoration: const InputDecoration(labelText: 'Kategoria'),
@@ -397,10 +412,12 @@ class _FixedCostsScreenState extends State<FixedCostsScreen> {
   }
 }
 
-// ======================
-// ANNUAL BUDGET SCREEN
-// ======================
+
+// EKRAN ROCZNEGO BUDŻETU
+
 class AnnualBudgetScreen extends StatefulWidget {
+  const AnnualBudgetScreen({super.key});
+
   @override
   State<AnnualBudgetScreen> createState() => _AnnualBudgetScreenState();
 }
@@ -444,12 +461,14 @@ class _AnnualBudgetScreenState extends State<AnnualBudgetScreen> {
   }
 }
 
+//OPIS I KWOTA, DO UŻYCIA W EKRANIE WYDATKÓW STAŁYCH I ZMIENNYCH
+
 class SummaryTile extends StatelessWidget {
   final String title;
   final double value;
   final bool bold;
 
-  const SummaryTile(this.title, this.value, {this.bold = false});
+  const SummaryTile(this.title, this.value, {super.key, this.bold = false});
 
   @override
   Widget build(BuildContext context) {
