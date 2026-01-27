@@ -1,7 +1,8 @@
+// IMPORT HIVE I INICJALIZACJA ADAPTERA
 import 'package:hive/hive.dart';
-
 part 'fixed_costs.g.dart';
 
+// DEFINIOWANIE KOSZTU STAŁEGO JAKO MIESIĘCZNEGO LUB ROCZNEGO
 @HiveType(typeId: 2)
 enum FixedCostPeriod {
   @HiveField(0)
@@ -10,6 +11,7 @@ enum FixedCostPeriod {
   yearly,
 }
 
+// DEFINIOWANIE TEGO, CO ZAWIERA KOSZT STAŁY
 @HiveType(typeId: 3)
 class FixedCost extends HiveObject {
   @HiveField(0)
@@ -22,7 +24,7 @@ class FixedCost extends HiveObject {
   double amount;
 
   @HiveField(3)
-  String category; // już dodane
+  String category;
 
   @HiveField(4)
   FixedCostPeriod period;
@@ -34,7 +36,7 @@ class FixedCost extends HiveObject {
     required this.id,
     required this.name,
     required this.amount,
-    required this.category, // wymuszamy podanie kategorii
+    required this.category,
     required this.period,
     required this.startDate,
   });
@@ -60,7 +62,7 @@ class FixedCost extends HiveObject {
     return amount / 12;
   }
 
-  /// Dodany getter do kwoty w zadanym zakresie (opcjonalny)
+  /// Getter do kwoty w zadanym okresie
   double amountForPeriod(FixedCostPeriod targetPeriod) {
     if (targetPeriod == FixedCostPeriod.monthly) {
       return monthlyAmount();

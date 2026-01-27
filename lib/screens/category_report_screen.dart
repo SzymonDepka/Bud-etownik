@@ -1,13 +1,19 @@
+//IMPORT PAKIETÓW I MODELI
+
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../services/budget_service.dart';
 
+//DEFINIOWANIE EKRANU RAPORTU
+
 class CategoryReportScreen extends StatefulWidget {
-  const CategoryReportScreen({Key? key}) : super(key: key);
+  const CategoryReportScreen({super.key});
 
   @override
   State<CategoryReportScreen> createState() => _CategoryReportScreenState();
 }
+
+//BUDOWA EKRANU RAPORTU
 
 class _CategoryReportScreenState extends State<CategoryReportScreen> {
   DateTimeRange? _selectedRange;
@@ -60,7 +66,7 @@ class _CategoryReportScreenState extends State<CategoryReportScreen> {
       sections.add(PieChartSectionData(
         color: color,
         value: amount,
-        title: '${category}\n${value.toStringAsFixed(1)}%',
+        title: '$category\n${value.toStringAsFixed(1)}%',
         radius: 60,
         titleStyle: const TextStyle(
             fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),

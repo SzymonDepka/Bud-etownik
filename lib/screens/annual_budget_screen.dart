@@ -1,12 +1,20 @@
+//IMPORT PAKIETÓW
+
 import 'package:budzetownik/services/budget_service.dart';
 import 'package:budzetownik/models/transactions.dart';
 import 'package:budzetownik/models/fixed_costs.dart';
 import 'package:flutter/material.dart';
 
+//DEFINIOWANIE EKRANU BUDŻETU
+
 class AnnualBudgetScreen extends StatefulWidget {
+  const AnnualBudgetScreen({super.key});
+
   @override
   State<AnnualBudgetScreen> createState() => _AnnualBudgetScreenState();
 }
+
+//BUDOWA EKRANU BUDŻETU- JEDYNIE WYŚWIETLANIE DANYCH
 
 class _AnnualBudgetScreenState extends State<AnnualBudgetScreen> {
   final BudgetService _budgetService = BudgetService();
@@ -95,6 +103,8 @@ class _AnnualBudgetScreenState extends State<AnnualBudgetScreen> {
     }
   }
 }
+
+//BUDOWA EKRANU BUDŻETU- JAK LICZYĆ, W JAKIM TRYBIE I KIEDY ODŚWIEŻYĆ UI
 
 class _SummaryRow extends StatelessWidget {
   final String label;

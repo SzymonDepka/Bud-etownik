@@ -1,3 +1,5 @@
+//IMPORT PAKIETÓW I MODELI
+
 import 'package:hive/hive.dart';
 import '../models/transactions.dart';
 import '../models/fixed_costs.dart';
@@ -10,7 +12,7 @@ class BudgetService {
   late Box<Transaction> _transactionsBox;
   late Box<FixedCost> _fixedCostsBox;
 
-  /// Inicjalizacja Hive i otwarcie boxów
+  /// INICJALIZACJA HIVE I POBRANIE BOXÓW
   Future<void> init() async {
     _transactionsBox = await Hive.openBox<Transaction>('transactions');
     _fixedCostsBox = await Hive.openBox<FixedCost>('fixedCosts');
@@ -20,9 +22,8 @@ class BudgetService {
   List<Transaction> get transactions => _transactionsBox.values.toList();
   List<FixedCost> get fixedCosts => _fixedCostsBox.values.toList();
 
-  // ======================
-  // TRANSACTIONS
-  // ======================
+  // TRANZAKCJE
+  
   Future<void> addTransaction(Transaction t) async {
     await _transactionsBox.put(t.id, t);
   }
@@ -39,9 +40,9 @@ class BudgetService {
     }
   }
 
-  // ======================
-  // FIXED COSTS
-  // ======================
+  
+  // KOSZTY ZMIENNE
+  
   Future<void> addFixedCost(FixedCost fc) async {
     await _fixedCostsBox.put(fc.id, fc);
   }
@@ -58,9 +59,9 @@ class BudgetService {
     }
   }
 
-  // ======================
+  
   // OBLICZENIA BUDŻETU
-  // ======================
+
   double calculateIncome(BudgetViewMode mode) {
     final income = transactions
         .where((t) => t.type == TransactionType.income)
@@ -101,23 +102,25 @@ class BudgetService {
     return value;
   }
 
-  // ======================
+  
   // RAPORT KATEGORII
-  // ======================
+  
   Map<String, double> getTotalsByCategory({
     required DateTime start,
     required DateTime end,
   }) {
     final Map<String, double> totals = {};
 
-    // Koszty stałe
+    // KOSZTY STAŁE
     for (final fc in fixedCosts) {
       if (!fc.appliesToMonth(start.year, start.month) &&
-          !fc.appliesToMonth(end.year, end.month)) continue;
+          !fc.appliesToMonth(end.year, end.month)) {
+        continue;
+      }
       totals[fc.category] = (totals[fc.category] ?? 0) + fc.monthlyAmount();
     }
 
-    // Koszty zmienne (transakcje typu expense)
+    // KOSZTY ZMIENNE
     for (final t in transactions.where((t) => t.type == TransactionType.expense)) {
       if (t.date.isBefore(start) || t.date.isAfter(end)) continue;
       totals[t.category] = (totals[t.category] ?? 0) + t.amount;
@@ -127,7 +130,7 @@ class BudgetService {
   }
 }
 
-/// Tryb widoku budżetu
+/// TRYB WIDOKU BUDŻETU
 enum BudgetViewMode { daily, monthly, yearly }
 
 
