@@ -1,0 +1,1 @@
+ D:\\FlutterProjects\\budzetownik\\build\\6a77564dcde963392c59a9d03ea52acd\\dart_build_result.json:  D:\\FlutterProjects\\budzetownik\\.dart_tool\\package_config.json D:\\FlutterProjects\\budzetownik\\pubspec.yaml D:\\flutter\\flutter_windows_3.38.7-stable\\flutter\\bin\\cache\\dart-sdk\\version d:\\flutterprojects\\budzetownik\\.dart_tool\\package_config.json
