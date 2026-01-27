@@ -1,3 +1,5 @@
+Kod który wykonywałem znajduję się w folderze lib oraz w pliku pubsec.yaml
+
 # Charakterystyka oprogramowania:
 Nazwa skrócona: Budżetownik
 
