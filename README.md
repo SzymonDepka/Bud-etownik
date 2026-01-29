@@ -1,5 +1,7 @@
 Kod który wykonywałem znajduję się w folderze lib oraz w pliku pubsec.yaml
 
+Link do strony na Netlify: https://budzetownik-681bf4.netlify.app/
+
 # Charakterystyka oprogramowania:
 Nazwa skrócona: Budżetownik
 
